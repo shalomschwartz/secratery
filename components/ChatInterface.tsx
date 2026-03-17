@@ -305,9 +305,9 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-[#0f1117] text-slate-100">
+    <div className="flex flex-col h-screen bg-gray-50 dark:bg-[#0f1117] text-gray-900 dark:text-slate-100 transition-colors duration-500">
       {/* Header */}
-      <header className="flex items-center justify-between px-4 py-3 border-b border-slate-800 bg-slate-900/60 backdrop-blur shrink-0">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/60 backdrop-blur shrink-0">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-600">
             <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -315,37 +315,34 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
             </svg>
           </div>
           <div>
-            <h1 className="text-sm font-semibold text-white">AI Secretary</h1>
-            <p className="text-xs text-slate-400">{userEmail}</p>
+            <h1 className="text-sm font-semibold text-gray-900 dark:text-white">AI Secretary</h1>
+            <p className="text-xs text-gray-500 dark:text-slate-400">{userEmail}</p>
           </div>
         </div>
 
         <div className="flex items-center gap-1">
-          {/* Capability badges */}
-          <span className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-slate-800 text-slate-300 mr-2">
+          <span className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 mr-2">
             <Calendar size={11} /> Calendar
           </span>
-          <span className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-slate-800 text-slate-300 mr-2">
+          <span className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 mr-2">
             <Mail size={11} /> Gmail
           </span>
 
-          {/* TTS toggle */}
           <button
             onClick={() => {
               setTtsEnabled((v) => !v);
               if (ttsEnabled) window.speechSynthesis?.cancel();
             }}
             title={ttsEnabled ? "Mute voice responses" : "Enable voice responses"}
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
           >
             {ttsEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
           </button>
 
-          {/* Sign out */}
           <button
             onClick={() => signOut()}
             title="Sign out"
-            className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            className="p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
           >
             <LogOut size={16} />
           </button>
@@ -368,20 +365,20 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
               className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
                 msg.role === "user"
                   ? "bg-indigo-600 text-white rounded-tr-sm"
-                  : "bg-slate-800 text-slate-100 rounded-tl-sm"
+                  : "bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-100 rounded-tl-sm shadow-sm border border-gray-100 dark:border-transparent"
               }`}
             >
               {msg.content}
               {msg.role === "assistant" && !msg.content && isLoading && (
                 <span className="inline-flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce" />
+                  <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                  <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                  <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce" />
                 </span>
               )}
             </div>
             {msg.role === "user" && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-slate-700 flex items-center justify-center text-white text-xs font-bold mt-0.5">
+              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-300 dark:bg-slate-700 flex items-center justify-center text-gray-700 dark:text-white text-xs font-bold mt-0.5">
                 {userEmail?.[0]?.toUpperCase() ?? "U"}
               </div>
             )}
@@ -396,9 +393,9 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
               {activeToolCalls.map((label, i) => (
                 <div
                   key={i}
-                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800 border border-slate-700 text-xs text-slate-300"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-100 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-xs text-gray-600 dark:text-slate-300"
                 >
-                  <Loader2 size={12} className="animate-spin text-indigo-400" />
+                  <Loader2 size={12} className="animate-spin text-indigo-500" />
                   {label}…
                 </div>
               ))}
@@ -410,22 +407,20 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       </div>
 
       {/* Input bar */}
-      <div className="shrink-0 border-t border-slate-800 bg-slate-900/60 backdrop-blur px-4 py-3">
+      <div className="shrink-0 border-t border-gray-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/60 backdrop-blur px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-end gap-2">
-          {/* Voice button */}
           <button
             onClick={toggleRecording}
             title={isRecording ? "Stop recording" : "Voice input"}
             className={`relative flex-shrink-0 p-2.5 rounded-xl transition-colors ${
               isRecording
                 ? "bg-red-600 text-white pulse-ring"
-                : "bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700"
+                : "bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-200 dark:hover:bg-slate-700"
             }`}
           >
             {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
           </button>
 
-          {/* Text input */}
           <textarea
             ref={textareaRef}
             value={input}
@@ -434,10 +429,9 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
             placeholder="Ask me anything… schedule a meeting, read emails, send a reply…"
             rows={1}
             disabled={isLoading}
-            className="flex-1 resize-none bg-slate-800 text-slate-100 placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 transition-all min-h-[42px] max-h-40"
+            className="flex-1 resize-none bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 transition-all min-h-[42px] max-h-40"
           />
 
-          {/* Send button */}
           <button
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || isLoading}
@@ -450,7 +444,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
             )}
           </button>
         </div>
-        <p className="text-center text-xs text-slate-600 mt-2">
+        <p className="text-center text-xs text-gray-400 dark:text-slate-600 mt-2">
           Press Enter to send · Shift+Enter for new line · Click mic or speak and pause to send
         </p>
       </div>

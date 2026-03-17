@@ -4,7 +4,7 @@ import { signIn } from "next-auth/react";
 
 export function SignIn() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0f1117]">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-[#0f1117] transition-colors duration-500">
       <div className="max-w-sm w-full mx-4">
         {/* Logo / Title */}
         <div className="text-center mb-10">
@@ -23,10 +23,10 @@ export function SignIn() {
               />
             </svg>
           </div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
             AI Secretary
           </h1>
-          <p className="mt-2 text-slate-400 text-sm">
+          <p className="mt-2 text-gray-500 dark:text-slate-400 text-sm">
             Your intelligent assistant for Calendar &amp; Email
           </p>
         </div>
@@ -41,7 +41,7 @@ export function SignIn() {
           ].map((f) => (
             <span
               key={f}
-              className="px-3 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-300 border border-slate-700"
+              className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700"
             >
               {f}
             </span>
@@ -49,8 +49,8 @@ export function SignIn() {
         </div>
 
         {/* Sign-in card */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 shadow-xl">
-          <p className="text-slate-400 text-sm text-center mb-6">
+        <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl p-8 shadow-xl">
+          <p className="text-gray-500 dark:text-slate-400 text-sm text-center mb-6">
             Sign in with Google to grant access to your Calendar and Gmail.
           </p>
           <button
@@ -60,7 +60,7 @@ export function SignIn() {
             <GoogleIcon />
             Continue with Google
           </button>
-          <p className="mt-4 text-xs text-slate-500 text-center">
+          <p className="mt-4 text-xs text-gray-400 dark:text-slate-500 text-center">
             Requires Calendar and Gmail permissions. Your data stays private.
           </p>
         </div>
