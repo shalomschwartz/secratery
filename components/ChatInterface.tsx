@@ -410,13 +410,13 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       {/* Input bar */}
       <div className="shrink-0 border-t border-gray-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/60 backdrop-blur px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-end gap-2">
-          {/* Language toggle */}
+          {/* Language toggle — shows current language as a flag */}
           <button
             onClick={() => setSpeechLang((l) => l === "en-US" ? "iw-IL" : "en-US")}
-            title="Switch speech language"
-            className="flex-shrink-0 px-2.5 py-2 rounded-xl text-xs font-bold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+            title={`Speaking ${speechLang === "en-US" ? "English" : "Hebrew"} — click to switch`}
+            className="flex-shrink-0 px-2.5 py-2 rounded-xl text-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors leading-none"
           >
-            {speechLang === "en-US" ? "EN" : "עב"}
+            {speechLang === "en-US" ? "🇺🇸" : "🇮🇱"}
           </button>
 
           {/* Mic button */}
