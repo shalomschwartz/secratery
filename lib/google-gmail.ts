@@ -99,13 +99,31 @@ export async function listEmails(
 
   if (!response.data.messages?.length) return [];
 
+  // Use metadata format (headers only) for fast listing — no full body needed
   const messages = await Promise.all(
     response.data.messages.slice(0, maxResults).map((m) =>
-      gmail.users.messages.get({ userId: "me", id: m.id!, format: "full" })
+      gmail.users.messages.get({
+        userId: "me",
+        id: m.id!,
+        format: "metadata",
+        metadataHeaders: ["Subject", "From", "To", "Date", "Message-ID", "References"],
+      })
     )
   );
 
-  return messages.map((m) => parseMessage(m.data));
+  return messages.map((m) => ({
+    id: m.data.id,
+    threadId: m.data.threadId,
+    subject: m.data.payload?.headers?.find(h => h.name === "Subject")?.value || "",
+    from: m.data.payload?.headers?.find(h => h.name === "From")?.value || "",
+    to: m.data.payload?.headers?.find(h => h.name === "To")?.value || "",
+    date: m.data.payload?.headers?.find(h => h.name === "Date")?.value || "",
+    snippet: m.data.snippet,
+    labels: m.data.labelIds || [],
+    messageId: m.data.payload?.headers?.find(h => h.name === "Message-ID")?.value || "",
+    references: m.data.payload?.headers?.find(h => h.name === "References")?.value || "",
+    body: "(Use get_email with this id to read the full message body)",
+  }));
 }
 
 export async function getEmail(accessToken: string, messageId: string) {
