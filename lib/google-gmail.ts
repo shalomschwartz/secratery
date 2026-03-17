@@ -88,12 +88,14 @@ export async function listEmails(
   }
 ) {
   const gmail = getGmailClient(accessToken);
-  const { maxResults = 10, q, labelIds = ["INBOX", "CATEGORY_PERSONAL"] } = params;
+  const { maxResults = 10, q, labelIds } = params;
+  // Default to Primary inbox using Gmail search query (more reliable than label filtering)
+  const query = q ?? "in:inbox category:primary";
 
   const response = await gmail.users.messages.list({
     userId: "me",
     maxResults,
-    q,
+    q: query,
     labelIds,
   });
 
