@@ -437,7 +437,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask me anything… schedule a meeting, read emails, send a reply…"
+            placeholder={speechLang === "en-US" ? "Ask me anything… schedule a meeting, read emails, send a reply…" : "שאל אותי הכל… קבע פגישה, קרא מיילים, שלח תגובה…"}
             rows={1}
             disabled={isLoading}
             className="flex-1 resize-none bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 transition-all min-h-[42px] max-h-40"
