@@ -53,6 +53,11 @@ export const authOptions: NextAuthOptions = {
     }),
   ],
   callbacks: {
+    async signIn({ user }) {
+      const allowed = process.env.ALLOWED_EMAILS?.split(",").map((e) => e.trim().toLowerCase());
+      if (!allowed || allowed.length === 0) return true; // no restriction if env var not set
+      return allowed.includes((user.email ?? "").toLowerCase());
+    },
     async jwt({ token, account }) {
       if (account) {
         return {
