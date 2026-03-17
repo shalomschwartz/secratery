@@ -451,7 +451,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
           </button>
         </div>
         <p className="text-center text-xs text-slate-600 mt-2">
-          Press Enter to send · Shift+Enter for new line · Click mic to speak
+          Press Enter to send · Shift+Enter for new line · Click mic or speak and pause to send
         </p>
       </div>
     </div>
