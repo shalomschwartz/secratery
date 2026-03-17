@@ -99,6 +99,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
   const [activeToolCalls, setActiveToolCalls] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [speechLang, setSpeechLang] = useState<"en-US" | "iw-IL">("en-US");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -265,7 +266,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     const recognition = new SpeechRecognitionAPI();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = "en-US";
+    recognition.lang = speechLang;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let transcript = "";
@@ -295,7 +296,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     recognitionRef.current = recognition;
     recognition.start();
     setIsRecording(true);
-  }, [isRecording, sendMessage]);
+  }, [isRecording, sendMessage, speechLang]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -409,9 +410,19 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       {/* Input bar */}
       <div className="shrink-0 border-t border-gray-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/60 backdrop-blur px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-end gap-2">
+          {/* Language toggle */}
+          <button
+            onClick={() => setSpeechLang((l) => l === "en-US" ? "iw-IL" : "en-US")}
+            title="Switch speech language"
+            className="flex-shrink-0 px-2.5 py-2 rounded-xl text-xs font-bold bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            {speechLang === "en-US" ? "EN" : "עב"}
+          </button>
+
+          {/* Mic button */}
           <button
             onClick={toggleRecording}
-            title={isRecording ? "Stop recording" : "Voice input"}
+            title={isRecording ? "Stop recording" : `Voice input (${speechLang === "en-US" ? "English" : "Hebrew"})`}
             className={`relative flex-shrink-0 p-2.5 rounded-xl transition-colors ${
               isRecording
                 ? "bg-red-600 text-white pulse-ring"
