@@ -88,7 +88,7 @@ export async function listEmails(
   }
 ) {
   const gmail = getGmailClient(accessToken);
-  const { maxResults = 500, q, labelIds = ["INBOX", "CATEGORY_PERSONAL"] } = params;
+  const { maxResults = 10, q, labelIds = ["INBOX", "CATEGORY_PERSONAL"] } = params;
 
   const response = await gmail.users.messages.list({
     userId: "me",
@@ -99,7 +99,6 @@ export async function listEmails(
 
   if (!response.data.messages?.length) return [];
 
-  // Use metadata format (headers only) for fast listing — no full body needed
   const messages = await Promise.all(
     response.data.messages.map((m) =>
       gmail.users.messages.get({
