@@ -88,7 +88,7 @@ export async function listEmails(
   }
 ) {
   const gmail = getGmailClient(accessToken);
-  const { maxResults = 10, q, labelIds } = params;
+  const { maxResults = 10, q, labelIds = ["INBOX"] } = params;
 
   const response = await gmail.users.messages.list({
     userId: "me",
