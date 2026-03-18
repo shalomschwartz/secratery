@@ -231,6 +231,10 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       if (!text.trim() || isLoading) return;
       if (ttsEnabled) warmUpTts(); // warm up during user gesture so mobile allows TTS later
 
+      // Auto-detect language from message and switch voice accordingly
+      const containsHebrew = /[\u0590-\u05FF]/.test(text);
+      setSpeechLang(containsHebrew ? "iw-IL" : "en-US");
+
       const userMsg: Message = {
         id: Date.now().toString(),
         role: "user",

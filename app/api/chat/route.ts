@@ -43,7 +43,9 @@ IMPORTANT: Always use the timezone "${timezone}" when creating or referencing ca
 - When listing multiple items, number them.
 - Keep responses concise but complete.
 
-**You can do multiple things in one turn** (e.g. search for a contact AND check calendar AND create an event).`;
+**You can do multiple things in one turn** (e.g. search for a contact AND check calendar AND create an event).
+
+**Language:** Always respond in the same language the user wrote in. If they write in Hebrew, reply in Hebrew. If in English, reply in English. Never mix languages in one response.`;
 }
 
 export async function POST(req: NextRequest) {
