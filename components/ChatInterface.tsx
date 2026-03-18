@@ -119,23 +119,36 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     ta.style.height = Math.min(ta.scrollHeight, 160) + "px";
   }, [input]);
 
-  // Unlock speech synthesis on first user gesture (browsers block audio until interaction)
-  const unlockTts = useCallback(() => {
-    if (!window.speechSynthesis) return;
-    const silent = new SpeechSynthesisUtterance("");
-    silent.volume = 0;
-    window.speechSynthesis.speak(silent);
-  }, []);
-
-  // Speak text aloud
+  // Speak text aloud — waits for voices to load, picks best voice for language
   const speak = useCallback((text: string) => {
     if (!ttsEnabled || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const utt = new SpeechSynthesisUtterance(text);
-    utt.lang = speechLang;
-    utt.rate = 1.05;
-    utt.pitch = 1;
-    window.speechSynthesis.speak(utt);
+
+    const doSpeak = () => {
+      const utt = new SpeechSynthesisUtterance(text);
+      utt.lang = speechLang;
+      utt.rate = 1.0;
+      utt.pitch = 1;
+      utt.volume = 1;
+
+      // Pick a voice that matches the language
+      const voices = window.speechSynthesis.getVoices();
+      const match = voices.find((v) => v.lang.startsWith(speechLang.split("-")[0]));
+      if (match) utt.voice = match;
+
+      window.speechSynthesis.speak(utt);
+    };
+
+    // Voices may not be loaded yet — wait for them
+    const voices = window.speechSynthesis.getVoices();
+    if (voices.length > 0) {
+      doSpeak();
+    } else {
+      window.speechSynthesis.onvoiceschanged = () => {
+        window.speechSynthesis.onvoiceschanged = null;
+        doSpeak();
+      };
+    }
   }, [ttsEnabled, speechLang]);
 
   // Send a message
