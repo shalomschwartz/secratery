@@ -155,7 +155,6 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || isLoading) return;
-      unlockTts();
 
       const userMsg: Message = {
         id: Date.now().toString(),
@@ -267,7 +266,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
         setActiveToolCalls([]);
       }
     },
-    [isLoading, messages, ttsEnabled, speak, unlockTts]
+    [isLoading, messages, ttsEnabled, speak]
   );
 
   // Voice recording toggle
