@@ -124,10 +124,11 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     if (!ttsEnabled || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     const utt = new SpeechSynthesisUtterance(text);
+    utt.lang = speechLang;
     utt.rate = 1.05;
     utt.pitch = 1;
     window.speechSynthesis.speak(utt);
-  }, [ttsEnabled]);
+  }, [ttsEnabled, speechLang]);
 
   // Send a message
   const sendMessage = useCallback(
