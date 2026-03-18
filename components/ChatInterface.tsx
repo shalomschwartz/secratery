@@ -174,6 +174,13 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       voices.find((v) => matchesLang(v)) ??
       null;
 
+    // If Hebrew selected but no Hebrew voice installed, warn the user
+    if (isHebrew && !voice) {
+      setIsSpeaking(false);
+      alert("No Hebrew voice found on this device.\n\niPhone: Settings → Accessibility → Spoken Content → Voices → Hebrew\nWindows: Settings → Time & Language → Speech → Add voices → Hebrew");
+      return;
+    }
+
     const speakNext = (index: number) => {
       if (index >= sentences.length) { setIsSpeaking(false); return; }
       const utt = new SpeechSynthesisUtterance(sentences[index].trim());
