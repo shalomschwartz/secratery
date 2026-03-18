@@ -401,11 +401,11 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
             <Mail size={11} /> Gmail
           </span>
 
-          {isSpeaking && (
+          {ttsEnabled && (
             <button
               onClick={() => { window.speechSynthesis?.cancel(); setIsSpeaking(false); }}
               title="Stop speaking"
-              className="p-2 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              className={`p-2 rounded-lg transition-colors ${isSpeaking ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" : "text-gray-400 dark:text-slate-600 hover:text-gray-700 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"}`}
             >
               <VolumeX size={16} />
             </button>
@@ -415,7 +415,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
               setTtsEnabled((v) => !v);
               if (ttsEnabled) { window.speechSynthesis?.cancel(); setIsSpeaking(false); }
             }}
-            title={ttsEnabled ? "Mute voice responses" : "Enable voice responses"}
+            title={ttsEnabled ? "Disable voice responses" : "Enable voice responses"}
             className="p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
           >
             {ttsEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
