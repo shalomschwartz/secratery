@@ -6,8 +6,6 @@ import {
   Send,
   Mic,
   MicOff,
-  Volume2,
-  VolumeX,
   LogOut,
   Calendar,
   Mail,
@@ -98,16 +96,11 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [activeToolCalls, setActiveToolCalls] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
-  const [ttsEnabled, setTtsEnabled] = useState(true);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [speechLang, setSpeechLang] = useState<"en-US" | "iw-IL">("en-US");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const currentAssistantId = useRef<string | null>(null);
-  const pendingSpeakRef = useRef<string | null>(null);
-  const ttsReadyRef = useRef(false);
 
   // Auto-scroll
   useEffect(() => {
@@ -122,118 +115,10 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     ta.style.height = Math.min(ta.scrollHeight, 160) + "px";
   }, [input]);
 
-  // Strip markdown and emojis so speech sounds natural
-  const stripForSpeech = (text: string) =>
-    text
-      .replace(/\*\*(.*?)\*\*/g, "$1")
-      .replace(/\*(.*?)\*/g, "$1")
-      .replace(/#{1,6}\s/g, "")
-      .replace(/`{1,3}[^`]*`{1,3}/g, "")
-      .replace(/---/g, "")
-      .replace(/•/g, "")
-      // Remove emojis
-      .replace(/[\u{1F000}-\u{1FFFF}]/gu, "")
-      .replace(/[\u{2600}-\u{27BF}]/gu, "")
-      .replace(/[\u{FE00}-\u{FEFF}]/gu, "")
-      .replace(/\n{2,}/g, ". ")
-      .replace(/\n/g, " ")
-      .replace(/\s{2,}/g, " ")
-      .trim();
-
-  // Warm up speech synthesis during user gesture so mobile browsers allow it later
-  const warmUpTts = useCallback(() => {
-    if (!window.speechSynthesis) return;
-    const utt = new SpeechSynthesisUtterance(" ");
-    utt.volume = 0;
-    utt.onend = () => { ttsReadyRef.current = true; };
-    window.speechSynthesis.speak(utt);
-  }, []);
-
-  // Core speak logic — splits into sentences to avoid Chrome 15s cutoff bug
-  const doSpeak = useCallback((text: string) => {
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.resume();
-    setIsSpeaking(true);
-
-    const clean = stripForSpeech(text);
-    const sentences = clean.match(/[^.!?]+[.!?]+/g) || [clean];
-    const voices = window.speechSynthesis.getVoices();
-
-    // Hebrew: devices use "he-IL" but the app stores "iw-IL" (old Google code) — check both
-    const isHebrew = speechLang === "iw-IL";
-    const utteranceLang = isHebrew ? "he-IL" : speechLang;
-    const langCodes = isHebrew ? ["he", "iw"] : [speechLang.split("-")[0]];
-
-    const matchesLang = (v: SpeechSynthesisVoice) => langCodes.some((c) => v.lang.startsWith(c));
-
-    // Prefer natural/neural/premium voices, fall back to any matching language
-    const voice =
-      voices.find((v) => matchesLang(v) && /natural|neural|premium|enhanced/i.test(v.name)) ??
-      voices.find((v) => v.lang === utteranceLang) ??
-      voices.find((v) => matchesLang(v)) ??
-      null;
-
-    // If Hebrew selected but no Hebrew voice installed, warn the user
-    if (isHebrew && !voice) {
-      setIsSpeaking(false);
-      alert("No Hebrew voice found on this device.\n\niPhone: Settings → Accessibility → Spoken Content → Voices → Hebrew\nWindows: Settings → Time & Language → Speech → Add voices → Hebrew");
-      return;
-    }
-
-    const speakNext = (index: number) => {
-      if (index >= sentences.length) { setIsSpeaking(false); return; }
-      const utt = new SpeechSynthesisUtterance(sentences[index].trim());
-      utt.lang = utteranceLang;
-      utt.rate = 0.95;
-      utt.pitch = 1;
-      utt.volume = 1;
-      if (voice) utt.voice = voice;
-      utt.onend = () => speakNext(index + 1);
-      utt.onerror = () => setIsSpeaking(false);
-      window.speechSynthesis.speak(utt);
-    };
-
-    if (voices.length > 0) {
-      speakNext(0);
-    } else {
-      window.speechSynthesis.onvoiceschanged = () => {
-        window.speechSynthesis.onvoiceschanged = null;
-        speakNext(0);
-      };
-    }
-  }, [speechLang]);
-
-  // Speak — if TTS not warmed up yet, queue it and retry
-  const speak = useCallback((text: string) => {
-    if (!ttsEnabled || !window.speechSynthesis) return;
-    if (ttsReadyRef.current) {
-      doSpeak(text);
-    } else {
-      // Mobile: TTS not ready yet, queue and retry after short delay
-      pendingSpeakRef.current = text;
-      const interval = setInterval(() => {
-        if (ttsReadyRef.current && pendingSpeakRef.current) {
-          clearInterval(interval);
-          const queued = pendingSpeakRef.current;
-          pendingSpeakRef.current = null;
-          doSpeak(queued);
-        }
-      }, 100);
-      // Give up after 5s
-      setTimeout(() => clearInterval(interval), 5000);
-    }
-  }, [ttsEnabled, doSpeak]);
-
   // Send a message
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || isLoading) return;
-      if (ttsEnabled) warmUpTts(); // warm up during user gesture so mobile allows TTS later
-
-      // Auto-detect language from message and switch voice accordingly
-      const containsHebrew = /[\u0590-\u05FF]/.test(text);
-      setSpeechLang(containsHebrew ? "iw-IL" : "en-US");
 
       const userMsg: Message = {
         id: Date.now().toString(),
@@ -322,10 +207,6 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
               setActiveToolCalls((prev) => prev.filter((t) => t !== label));
             }
 
-            if (event.type === "done") {
-              if (ttsEnabled && fullText) speak(fullText);
-            }
-
             if (event.type === "error") {
               throw new Error(event.error);
             }
@@ -345,7 +226,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
         setActiveToolCalls([]);
       }
     },
-    [isLoading, messages, ttsEnabled, speak, warmUpTts]
+    [isLoading, messages]
   );
 
   // Voice recording toggle
@@ -367,8 +248,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     const recognition = new SpeechRecognitionAPI();
     recognition.continuous = false;
     recognition.interimResults = true;
-    // Always use he-IL — it recognizes both Hebrew and English,
-    // so the flag only affects TTS output, not speech input.
+    // he-IL recognizes both Hebrew and English speech
     recognition.lang = "he-IL";
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
@@ -378,11 +258,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       }
       setInput(transcript);
 
-      // Auto-detect language from transcript and update TTS language
       if (event.results[event.results.length - 1].isFinal) {
-        const containsHebrew = /[\u0590-\u05FF]/.test(transcript);
-        setSpeechLang(containsHebrew ? "iw-IL" : "en-US");
-
         recognition.stop();
         setIsRecording(false);
         if (transcript.trim()) {
@@ -399,7 +275,6 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       setIsRecording(false);
     };
 
-    if (isSpeaking) { window.speechSynthesis?.cancel(); setIsSpeaking(false); }
     recognitionRef.current = recognition;
     recognition.start();
     setIsRecording(true);
@@ -435,26 +310,6 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
           <span className="hidden sm:flex items-center gap-1 px-2 py-1 rounded-md text-xs bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 mr-2">
             <Mail size={11} /> Gmail
           </span>
-
-          {ttsEnabled && (
-            <button
-              onClick={() => { window.speechSynthesis?.cancel(); setIsSpeaking(false); }}
-              title="Stop speaking"
-              className={`p-2 rounded-lg transition-colors ${isSpeaking ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" : "text-gray-400 dark:text-slate-600 hover:text-gray-700 dark:hover:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-800"}`}
-            >
-              <VolumeX size={16} />
-            </button>
-          )}
-          <button
-            onClick={() => {
-              setTtsEnabled((v) => !v);
-              if (ttsEnabled) { window.speechSynthesis?.cancel(); setIsSpeaking(false); }
-            }}
-            title={ttsEnabled ? "Disable voice responses" : "Enable voice responses"}
-            className="p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            {ttsEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
-          </button>
 
           <button
             onClick={() => signOut()}
@@ -495,18 +350,6 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
                   </span>
                 )}
               </div>
-              {msg.role === "assistant" && msg.content && (
-                <button
-                  onClick={() => {
-                    if (isSpeaking) { window.speechSynthesis?.cancel(); setIsSpeaking(false); }
-                    else doSpeak(msg.content);
-                  }}
-                  className={`self-start p-1.5 rounded-lg transition-colors ${isSpeaking ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" : "text-gray-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-slate-800"}`}
-                  title={isSpeaking ? "Stop speaking" : "Tap to hear this message"}
-                >
-                  {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
-                </button>
-              )}
             </div>
             {msg.role === "user" && (
               <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-gray-300 dark:bg-slate-700 flex items-center justify-center text-gray-700 dark:text-white text-xs font-bold mt-0.5">
@@ -540,19 +383,10 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       {/* Input bar */}
       <div className="shrink-0 border-t border-gray-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/60 backdrop-blur px-4 py-3">
         <div className="max-w-3xl mx-auto flex items-end gap-2">
-          {/* Language toggle — shows current language as a flag */}
-          <button
-            onClick={() => setSpeechLang((l) => l === "en-US" ? "iw-IL" : "en-US")}
-            title={`Speaking ${speechLang === "en-US" ? "English" : "Hebrew"} — click to switch`}
-            className="flex-shrink-0 px-2.5 py-2 rounded-xl text-lg bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors leading-none"
-          >
-            {speechLang === "en-US" ? "🇺🇸" : "🇮🇱"}
-          </button>
-
           {/* Mic button */}
           <button
             onClick={toggleRecording}
-            title={isRecording ? "Stop recording" : `Voice input (${speechLang === "en-US" ? "English" : "Hebrew"})`}
+            title={isRecording ? "Stop recording" : "Voice input"}
             className={`relative flex-shrink-0 p-2.5 rounded-xl transition-colors ${
               isRecording
                 ? "bg-red-600 text-white pulse-ring"
@@ -565,9 +399,9 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
           <textarea
             ref={textareaRef}
             value={input}
-            onChange={(e) => { setInput(e.target.value); if (isSpeaking) { window.speechSynthesis?.cancel(); setIsSpeaking(false); } }}
+            onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={speechLang === "en-US" ? "Ask me anything… schedule a meeting, read emails, send a reply…" : "שאל אותי הכל… קבע פגישה, קרא מיילים, שלח תגובה…"}
+            placeholder="Ask me anything… schedule a meeting, read emails, send a reply…"
             rows={1}
             disabled={isLoading}
             className="flex-1 resize-none bg-gray-100 dark:bg-slate-800 text-gray-900 dark:text-slate-100 placeholder-gray-400 dark:placeholder-slate-500 rounded-xl px-4 py-2.5 text-sm outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-60 transition-all min-h-[42px] max-h-40"
