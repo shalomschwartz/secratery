@@ -91,7 +91,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       id: "welcome",
       role: "assistant",
       content:
-        "Hi! I'm your AI Secretary. I have full access to your Google Calendar and Gmail. You can ask me to:\n\n• Schedule, edit, or delete calendar events\n• Read, send, reply to, or search your emails\n• Check your availability\n• Draft emails for you\n\nWhat can I help you with today?",
+        "Hi! I'm your AI Secretary. I have full access to your Google Calendar and Gmail. You can ask me to:\n\n• Schedule, edit, or delete calendar events\n• Read, send, reply to, or search your emails\n• Check your availability\n• Draft emails for you\n\nWhat can I help you with today?\n\n---\n\nשלום! אני המזכיר האישי שלך המופעל על ידי בינה מלאכותית. יש לי גישה מלאה ליומן Google ול-Gmail שלך. אני יכול לעזור לך:\n\n• לתזמן, לערוך או למחוק אירועים ביומן\n• לקרוא, לשלוח, להשיב או לחפש מיילים\n• לבדוק את הזמינות שלך\n• לנסח מיילים עבורך\n\nבמה אוכל לעזור לך היום?",
     },
   ]);
   const [input, setInput] = useState("");
