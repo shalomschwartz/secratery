@@ -431,20 +431,31 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
                 AI
               </div>
             )}
-            <div
-              className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
-                msg.role === "user"
-                  ? "bg-indigo-600 text-white rounded-tr-sm"
-                  : "bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-100 rounded-tl-sm shadow-sm border border-gray-100 dark:border-transparent"
-              }`}
-            >
-              {msg.content}
-              {msg.role === "assistant" && !msg.content && isLoading && (
-                <span className="inline-flex gap-1">
-                  <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
-                  <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
-                  <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce" />
-                </span>
+            <div className="flex flex-col gap-1 max-w-[80%]">
+              <div
+                className={`rounded-2xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${
+                  msg.role === "user"
+                    ? "bg-indigo-600 text-white rounded-tr-sm"
+                    : "bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-100 rounded-tl-sm shadow-sm border border-gray-100 dark:border-transparent"
+                }`}
+              >
+                {msg.content}
+                {msg.role === "assistant" && !msg.content && isLoading && (
+                  <span className="inline-flex gap-1">
+                    <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce [animation-delay:-0.3s]" />
+                    <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce [animation-delay:-0.15s]" />
+                    <span className="w-1.5 h-1.5 bg-gray-400 dark:bg-slate-400 rounded-full animate-bounce" />
+                  </span>
+                )}
+              </div>
+              {msg.role === "assistant" && msg.content && (
+                <button
+                  onClick={() => doSpeak(msg.content)}
+                  className="self-start p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
+                  title="Tap to hear this message"
+                >
+                  <Volume2 size={14} />
+                </button>
               )}
             </div>
             {msg.role === "user" && (
