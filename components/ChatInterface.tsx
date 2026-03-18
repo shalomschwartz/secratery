@@ -365,6 +365,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       setIsRecording(false);
     };
 
+    if (isSpeaking) { window.speechSynthesis?.cancel(); setIsSpeaking(false); }
     recognitionRef.current = recognition;
     recognition.start();
     setIsRecording(true);
@@ -462,11 +463,14 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
               </div>
               {msg.role === "assistant" && msg.content && (
                 <button
-                  onClick={() => doSpeak(msg.content)}
-                  className="self-start p-1.5 rounded-lg text-gray-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
-                  title="Tap to hear this message"
+                  onClick={() => {
+                    if (isSpeaking) { window.speechSynthesis?.cancel(); setIsSpeaking(false); }
+                    else doSpeak(msg.content);
+                  }}
+                  className={`self-start p-1.5 rounded-lg transition-colors ${isSpeaking ? "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20" : "text-gray-400 dark:text-slate-500 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-slate-800"}`}
+                  title={isSpeaking ? "Stop speaking" : "Tap to hear this message"}
                 >
-                  <Volume2 size={14} />
+                  {isSpeaking ? <VolumeX size={14} /> : <Volume2 size={14} />}
                 </button>
               )}
             </div>
@@ -527,7 +531,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
           <textarea
             ref={textareaRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => { setInput(e.target.value); if (isSpeaking) { window.speechSynthesis?.cancel(); setIsSpeaking(false); } }}
             onKeyDown={handleKeyDown}
             placeholder={speechLang === "en-US" ? "Ask me anything… schedule a meeting, read emails, send a reply…" : "שאל אותי הכל… קבע פגישה, קרא מיילים, שלח תגובה…"}
             rows={1}
