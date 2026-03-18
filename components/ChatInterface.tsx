@@ -119,6 +119,14 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     ta.style.height = Math.min(ta.scrollHeight, 160) + "px";
   }, [input]);
 
+  // Unlock speech synthesis on first user gesture (browsers block audio until interaction)
+  const unlockTts = useCallback(() => {
+    if (!window.speechSynthesis) return;
+    const silent = new SpeechSynthesisUtterance("");
+    silent.volume = 0;
+    window.speechSynthesis.speak(silent);
+  }, []);
+
   // Speak text aloud
   const speak = useCallback((text: string) => {
     if (!ttsEnabled || !window.speechSynthesis) return;
@@ -134,6 +142,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || isLoading) return;
+      unlockTts();
 
       const userMsg: Message = {
         id: Date.now().toString(),
@@ -245,7 +254,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
         setActiveToolCalls([]);
       }
     },
-    [isLoading, messages, ttsEnabled, speak]
+    [isLoading, messages, ttsEnabled, speak, unlockTts]
   );
 
   // Voice recording toggle
