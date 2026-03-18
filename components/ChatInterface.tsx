@@ -159,18 +159,25 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     const clean = stripForSpeech(text);
     const sentences = clean.match(/[^.!?]+[.!?]+/g) || [clean];
     const voices = window.speechSynthesis.getVoices();
-    const langCode = speechLang.split("-")[0];
+
+    // Hebrew: devices use "he-IL" but the app stores "iw-IL" (old Google code) — check both
+    const isHebrew = speechLang === "iw-IL";
+    const utteranceLang = isHebrew ? "he-IL" : speechLang;
+    const langCodes = isHebrew ? ["he", "iw"] : [speechLang.split("-")[0]];
+
+    const matchesLang = (v: SpeechSynthesisVoice) => langCodes.some((c) => v.lang.startsWith(c));
+
     // Prefer natural/neural/premium voices, fall back to any matching language
     const voice =
-      voices.find((v) => v.lang.startsWith(langCode) && /natural|neural|premium|enhanced/i.test(v.name)) ??
-      voices.find((v) => v.lang === speechLang) ??
-      voices.find((v) => v.lang.startsWith(langCode)) ??
+      voices.find((v) => matchesLang(v) && /natural|neural|premium|enhanced/i.test(v.name)) ??
+      voices.find((v) => v.lang === utteranceLang) ??
+      voices.find((v) => matchesLang(v)) ??
       null;
 
     const speakNext = (index: number) => {
       if (index >= sentences.length) { setIsSpeaking(false); return; }
       const utt = new SpeechSynthesisUtterance(sentences[index].trim());
-      utt.lang = speechLang;
+      utt.lang = utteranceLang;
       utt.rate = 0.95;
       utt.pitch = 1;
       utt.volume = 1;
