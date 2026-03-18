@@ -119,34 +119,52 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     ta.style.height = Math.min(ta.scrollHeight, 160) + "px";
   }, [input]);
 
-  // Speak text aloud — waits for voices to load, picks best voice for language
+  // Strip markdown so it sounds natural when spoken
+  const stripMarkdown = (text: string) =>
+    text
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/#{1,6}\s/g, "")
+      .replace(/`{1,3}[^`]*`{1,3}/g, "")
+      .replace(/---/g, "")
+      .replace(/•/g, "")
+      .replace(/\n{2,}/g, ". ")
+      .replace(/\n/g, " ")
+      .trim();
+
+  // Speak text aloud — splits into sentences to avoid Chrome 15s cutoff bug
   const speak = useCallback((text: string) => {
     if (!ttsEnabled || !window.speechSynthesis) return;
     window.speechSynthesis.cancel();
+    window.speechSynthesis.resume();
 
-    const doSpeak = () => {
-      const utt = new SpeechSynthesisUtterance(text);
+    const clean = stripMarkdown(text);
+    // Split into sentences so Chrome doesn't cut off long responses
+    const sentences = clean.match(/[^.!?]+[.!?]+/g) || [clean];
+
+    const voices = window.speechSynthesis.getVoices();
+    const voice = voices.find((v) => v.lang.startsWith(speechLang.split("-")[0])) ?? null;
+
+    const speakNext = (index: number) => {
+      if (index >= sentences.length) return;
+      const utt = new SpeechSynthesisUtterance(sentences[index].trim());
       utt.lang = speechLang;
       utt.rate = 1.0;
       utt.pitch = 1;
       utt.volume = 1;
-
-      // Pick a voice that matches the language
-      const voices = window.speechSynthesis.getVoices();
-      const match = voices.find((v) => v.lang.startsWith(speechLang.split("-")[0]));
-      if (match) utt.voice = match;
-
+      if (voice) utt.voice = voice;
+      utt.onend = () => speakNext(index + 1);
       window.speechSynthesis.speak(utt);
     };
 
-    // Voices may not be loaded yet — wait for them
-    const voices = window.speechSynthesis.getVoices();
+    const start = () => speakNext(0);
+
     if (voices.length > 0) {
-      doSpeak();
+      start();
     } else {
       window.speechSynthesis.onvoiceschanged = () => {
         window.speechSynthesis.onvoiceschanged = null;
-        doSpeak();
+        start();
       };
     }
   }, [ttsEnabled, speechLang]);
