@@ -99,6 +99,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
   const [activeToolCalls, setActiveToolCalls] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [ttsEnabled, setTtsEnabled] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [speechLang, setSpeechLang] = useState<"en-US" | "iw-IL">("en-US");
 
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -148,6 +149,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     window.speechSynthesis.resume();
+    setIsSpeaking(true);
 
     const clean = stripMarkdown(text);
     const sentences = clean.match(/[^.!?]+[.!?]+/g) || [clean];
@@ -155,7 +157,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     const voice = voices.find((v) => v.lang.startsWith(speechLang.split("-")[0])) ?? null;
 
     const speakNext = (index: number) => {
-      if (index >= sentences.length) return;
+      if (index >= sentences.length) { setIsSpeaking(false); return; }
       const utt = new SpeechSynthesisUtterance(sentences[index].trim());
       utt.lang = speechLang;
       utt.rate = 1.0;
@@ -163,6 +165,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       utt.volume = 1;
       if (voice) utt.voice = voice;
       utt.onend = () => speakNext(index + 1);
+      utt.onerror = () => setIsSpeaking(false);
       window.speechSynthesis.speak(utt);
     };
 
@@ -398,10 +401,19 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
             <Mail size={11} /> Gmail
           </span>
 
+          {isSpeaking && (
+            <button
+              onClick={() => { window.speechSynthesis?.cancel(); setIsSpeaking(false); }}
+              title="Stop speaking"
+              className="p-2 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            >
+              <VolumeX size={16} />
+            </button>
+          )}
           <button
             onClick={() => {
               setTtsEnabled((v) => !v);
-              if (ttsEnabled) window.speechSynthesis?.cancel();
+              if (ttsEnabled) { window.speechSynthesis?.cancel(); setIsSpeaking(false); }
             }}
             title={ttsEnabled ? "Mute voice responses" : "Enable voice responses"}
             className="p-2 rounded-lg text-gray-500 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors"
