@@ -9,13 +9,17 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
 });
 
-const SYSTEM_PROMPT = `You are a highly capable personal AI secretary. You have full access to the user's Google Calendar and Gmail through tools.
+function buildSystemPrompt(timezone: string) {
+  const now = new Date().toLocaleString("en-US", { timeZone: timezone, hour12: false });
+  return `You are a highly capable personal AI secretary. You have full access to the user's Google Calendar and Gmail through tools.
 
 Your capabilities:
 - Google Calendar: list events, create/update/delete events, check availability, manage multiple calendars
 - Gmail: read/send/reply/draft emails, search, mark read/unread, manage labels, trash emails
 
-Today's date and time: ${new Date().toISOString()}
+User's timezone: ${timezone}
+Current date and time for the user: ${now}
+IMPORTANT: Always use the timezone "${timezone}" when creating or referencing calendar events. Never use UTC unless explicitly asked.
 
 ## How to handle requests
 
@@ -40,6 +44,7 @@ Today's date and time: ${new Date().toISOString()}
 - Keep responses concise but complete.
 
 **You can do multiple things in one turn** (e.g. search for a contact AND check calendar AND create an event).`;
+}
 
 export async function POST(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -58,7 +63,7 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  const { messages } = await req.json();
+  const { messages, timezone = "UTC" } = await req.json();
   const accessToken = session.accessToken;
 
   const encoder = new TextEncoder();
@@ -84,7 +89,7 @@ export async function POST(req: NextRequest) {
           const response = await anthropic.messages.create({
             model: "claude-sonnet-4-6",
             max_tokens: 4096,
-            system: SYSTEM_PROMPT,
+            system: buildSystemPrompt(timezone),
             tools,
             messages: claudeMessages,
           });

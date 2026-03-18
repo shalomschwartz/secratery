@@ -166,7 +166,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
         const resp = await fetch("/api/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: history }),
+          body: JSON.stringify({ messages: history, timezone: Intl.DateTimeFormat().resolvedOptions().timeZone }),
         });
 
         if (!resp.ok) {
