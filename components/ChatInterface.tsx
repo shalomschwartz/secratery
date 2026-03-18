@@ -98,7 +98,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
   const [isLoading, setIsLoading] = useState(false);
   const [activeToolCalls, setActiveToolCalls] = useState<string[]>([]);
   const [isRecording, setIsRecording] = useState(false);
-  const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [ttsEnabled, setTtsEnabled] = useState(true);
   const [speechLang, setSpeechLang] = useState<"en-US" | "iw-IL">("en-US");
 
   const bottomRef = useRef<HTMLDivElement>(null);
