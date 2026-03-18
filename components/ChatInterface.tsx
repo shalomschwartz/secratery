@@ -122,8 +122,8 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     ta.style.height = Math.min(ta.scrollHeight, 160) + "px";
   }, [input]);
 
-  // Strip markdown so it sounds natural when spoken
-  const stripMarkdown = (text: string) =>
+  // Strip markdown and emojis so speech sounds natural
+  const stripForSpeech = (text: string) =>
     text
       .replace(/\*\*(.*?)\*\*/g, "$1")
       .replace(/\*(.*?)\*/g, "$1")
@@ -131,8 +131,13 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       .replace(/`{1,3}[^`]*`{1,3}/g, "")
       .replace(/---/g, "")
       .replace(/•/g, "")
+      // Remove emojis
+      .replace(/[\u{1F000}-\u{1FFFF}]/gu, "")
+      .replace(/[\u{2600}-\u{27BF}]/gu, "")
+      .replace(/[\u{FE00}-\u{FEFF}]/gu, "")
       .replace(/\n{2,}/g, ". ")
       .replace(/\n/g, " ")
+      .replace(/\s{2,}/g, " ")
       .trim();
 
   // Warm up speech synthesis during user gesture so mobile browsers allow it later
@@ -151,16 +156,22 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     window.speechSynthesis.resume();
     setIsSpeaking(true);
 
-    const clean = stripMarkdown(text);
+    const clean = stripForSpeech(text);
     const sentences = clean.match(/[^.!?]+[.!?]+/g) || [clean];
     const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find((v) => v.lang.startsWith(speechLang.split("-")[0])) ?? null;
+    const langCode = speechLang.split("-")[0];
+    // Prefer natural/neural/premium voices, fall back to any matching language
+    const voice =
+      voices.find((v) => v.lang.startsWith(langCode) && /natural|neural|premium|enhanced/i.test(v.name)) ??
+      voices.find((v) => v.lang === speechLang) ??
+      voices.find((v) => v.lang.startsWith(langCode)) ??
+      null;
 
     const speakNext = (index: number) => {
       if (index >= sentences.length) { setIsSpeaking(false); return; }
       const utt = new SpeechSynthesisUtterance(sentences[index].trim());
       utt.lang = speechLang;
-      utt.rate = 1.0;
+      utt.rate = 0.95;
       utt.pitch = 1;
       utt.volume = 1;
       if (voice) utt.voice = voice;
