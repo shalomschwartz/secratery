@@ -105,6 +105,8 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const currentAssistantId = useRef<string | null>(null);
+  const pendingSpeakRef = useRef<string | null>(null);
+  const ttsReadyRef = useRef(false);
 
   // Auto-scroll
   useEffect(() => {
@@ -132,16 +134,23 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       .replace(/\n/g, " ")
       .trim();
 
-  // Speak text aloud — splits into sentences to avoid Chrome 15s cutoff bug
-  const speak = useCallback((text: string) => {
-    if (!ttsEnabled || !window.speechSynthesis) return;
+  // Warm up speech synthesis during user gesture so mobile browsers allow it later
+  const warmUpTts = useCallback(() => {
+    if (!window.speechSynthesis) return;
+    const utt = new SpeechSynthesisUtterance(" ");
+    utt.volume = 0;
+    utt.onend = () => { ttsReadyRef.current = true; };
+    window.speechSynthesis.speak(utt);
+  }, []);
+
+  // Core speak logic — splits into sentences to avoid Chrome 15s cutoff bug
+  const doSpeak = useCallback((text: string) => {
+    if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
     window.speechSynthesis.resume();
 
     const clean = stripMarkdown(text);
-    // Split into sentences so Chrome doesn't cut off long responses
     const sentences = clean.match(/[^.!?]+[.!?]+/g) || [clean];
-
     const voices = window.speechSynthesis.getVoices();
     const voice = voices.find((v) => v.lang.startsWith(speechLang.split("-")[0])) ?? null;
 
@@ -157,22 +166,42 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       window.speechSynthesis.speak(utt);
     };
 
-    const start = () => speakNext(0);
-
     if (voices.length > 0) {
-      start();
+      speakNext(0);
     } else {
       window.speechSynthesis.onvoiceschanged = () => {
         window.speechSynthesis.onvoiceschanged = null;
-        start();
+        speakNext(0);
       };
     }
-  }, [ttsEnabled, speechLang]);
+  }, [speechLang]);
+
+  // Speak — if TTS not warmed up yet, queue it and retry
+  const speak = useCallback((text: string) => {
+    if (!ttsEnabled || !window.speechSynthesis) return;
+    if (ttsReadyRef.current) {
+      doSpeak(text);
+    } else {
+      // Mobile: TTS not ready yet, queue and retry after short delay
+      pendingSpeakRef.current = text;
+      const interval = setInterval(() => {
+        if (ttsReadyRef.current && pendingSpeakRef.current) {
+          clearInterval(interval);
+          const queued = pendingSpeakRef.current;
+          pendingSpeakRef.current = null;
+          doSpeak(queued);
+        }
+      }, 100);
+      // Give up after 5s
+      setTimeout(() => clearInterval(interval), 5000);
+    }
+  }, [ttsEnabled, doSpeak]);
 
   // Send a message
   const sendMessage = useCallback(
     async (text: string) => {
       if (!text.trim() || isLoading) return;
+      if (ttsEnabled) warmUpTts(); // warm up during user gesture so mobile allows TTS later
 
       const userMsg: Message = {
         id: Date.now().toString(),
@@ -284,7 +313,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
         setActiveToolCalls([]);
       }
     },
-    [isLoading, messages, ttsEnabled, speak]
+    [isLoading, messages, ttsEnabled, speak, warmUpTts]
   );
 
   // Voice recording toggle
