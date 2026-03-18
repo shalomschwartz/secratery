@@ -367,7 +367,9 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     const recognition = new SpeechRecognitionAPI();
     recognition.continuous = false;
     recognition.interimResults = true;
-    recognition.lang = speechLang;
+    // Always use he-IL — it recognizes both Hebrew and English,
+    // so the flag only affects TTS output, not speech input.
+    recognition.lang = "he-IL";
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       let transcript = "";
@@ -376,8 +378,11 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
       }
       setInput(transcript);
 
-      // Auto-send if final result
+      // Auto-detect language from transcript and update TTS language
       if (event.results[event.results.length - 1].isFinal) {
+        const containsHebrew = /[\u0590-\u05FF]/.test(transcript);
+        setSpeechLang(containsHebrew ? "iw-IL" : "en-US");
+
         recognition.stop();
         setIsRecording(false);
         if (transcript.trim()) {
@@ -398,7 +403,7 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     recognitionRef.current = recognition;
     recognition.start();
     setIsRecording(true);
-  }, [isRecording, sendMessage, speechLang]);
+  }, [isRecording, sendMessage]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
