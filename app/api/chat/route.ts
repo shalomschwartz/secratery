@@ -194,12 +194,31 @@ export async function POST(req: NextRequest) {
           })
         );
 
+        // Extract emails already found in conversation so Claude never re-searches them
+        function extractKnownContacts(msgs: Anthropic.Messages.MessageParam[]): string {
+          const found: Record<string, string> = {};
+          const emailRegex = /\b([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,})\b/g;
+          for (const msg of msgs) {
+            if (msg.role !== "assistant") continue;
+            const text = typeof msg.content === "string" ? msg.content
+              : msg.content.filter((b): b is Anthropic.Messages.TextBlockParam => b.type === "text").map(b => b.text).join(" ");
+            for (const match of text.matchAll(emailRegex)) {
+              const email = match[1].toLowerCase();
+              const name = email.split("@")[0];
+              found[name] = email;
+            }
+          }
+          if (Object.keys(found).length === 0) return "";
+          const lines = Object.entries(found).map(([, email]) => `- ${email}`).join("\n");
+          return `\n\n----------------------------------------\nKNOWN CONTACTS (already found — do NOT search for these again)\n----------------------------------------\n${lines}\n`;
+        }
+
         // Agentic loop — Claude calls tools until it's done
         while (true) {
           const response = await anthropic.messages.create({
             model: "claude-sonnet-4-6",
             max_tokens: 4096,
-            system: buildSystemPrompt(timezone),
+            system: buildSystemPrompt(timezone) + extractKnownContacts(claudeMessages),
             tools,
             messages: claudeMessages,
           });
