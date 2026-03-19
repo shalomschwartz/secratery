@@ -14,6 +14,24 @@ function encodeHeaderValue(value: string): string {
   return value;
 }
 
+function bodyToHtml(text: string): { html: string; dir: "rtl" | "ltr" } {
+  const hasHebrew = /[\u0590-\u05FF]/.test(text);
+  const dir = hasHebrew ? "rtl" : "ltr";
+  const fontFamily = "Arial, sans-serif";
+  const htmlBody = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>");
+  const html = `<!DOCTYPE html>
+<html dir="${dir}" lang="${hasHebrew ? "he" : "en"}">
+<head><meta charset="utf-8"></head>
+<body style="font-family:${fontFamily};font-size:15px;line-height:1.6;color:#222;direction:${dir};text-align:${dir === "rtl" ? "right" : "left"};max-width:600px;margin:0 auto;padding:24px;">
+${htmlBody}
+</body></html>`;
+  return { html, dir };
+}
+
 function encodeEmail(params: {
   to: string;
   subject: string;
@@ -24,18 +42,19 @@ function encodeEmail(params: {
   inReplyTo?: string;
   references?: string;
 }): string {
+  const { html } = bodyToHtml(params.body);
   const lines = [
     `To: ${params.to}`,
     `Subject: ${encodeHeaderValue(params.subject)}`,
-    `Content-Type: text/plain; charset=utf-8`,
     `MIME-Version: 1.0`,
+    `Content-Type: text/html; charset=utf-8`,
   ];
   if (params.from) lines.push(`From: ${params.from}`);
   if (params.cc) lines.push(`Cc: ${params.cc}`);
   if (params.bcc) lines.push(`Bcc: ${params.bcc}`);
   if (params.inReplyTo) lines.push(`In-Reply-To: ${params.inReplyTo}`);
   if (params.references) lines.push(`References: ${params.references}`);
-  lines.push("", params.body);
+  lines.push("", html);
 
   return Buffer.from(lines.join("\r\n")).toString("base64url");
 }
