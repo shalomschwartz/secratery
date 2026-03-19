@@ -107,6 +107,13 @@ export function ChatInterface({ userEmail }: { userEmail?: string }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, activeToolCalls]);
 
+  // Auto-focus textarea when AI finishes responding
+  useEffect(() => {
+    if (!isLoading) {
+      textareaRef.current?.focus();
+    }
+  }, [isLoading]);
+
   // Auto-resize textarea
   useEffect(() => {
     const ta = textareaRef.current;
