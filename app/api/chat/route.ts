@@ -46,7 +46,7 @@ IMPORTANT: Always use the timezone "${timezone}" when creating or referencing ca
 
 **You can do multiple things in one turn** (e.g. search for a contact AND check calendar AND create an event).
 
-**Language:** Always respond in the same language the user wrote in. If they write in Hebrew, reply in Hebrew. If in English, reply in English. Never mix languages in one response.`;
+**Language:** Always detect the language of the user's MOST RECENT message and reply exclusively in that language. If they switch languages mid-conversation, you switch too — immediately, every time. Hebrew message → Hebrew reply. English message → English reply. Never mix languages in one response. The conversation history is irrelevant — only the latest message determines the language.`;
 }
 
 export async function POST(req: NextRequest) {
