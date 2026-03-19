@@ -194,6 +194,17 @@ export async function POST(req: NextRequest) {
           })
         );
 
+        // Detect language of last user message and inject a hard instruction
+        function detectResponseLanguage(msgs: Anthropic.Messages.MessageParam[]): string {
+          const lastUser = [...msgs].reverse().find(m => m.role === "user");
+          if (!lastUser) return "";
+          const text = typeof lastUser.content === "string" ? lastUser.content
+            : (lastUser.content as Anthropic.Messages.TextBlockParam[]).filter(b => b.type === "text").map(b => b.text).join(" ");
+          const hasHebrew = /[\u0590-\u05FF]/.test(text);
+          const lang = hasHebrew ? "Hebrew" : "English";
+          return `\n\n⚠️ MANDATORY: The user's last message is in ${lang}. You MUST respond in ${lang} only. This overrides everything else.`;
+        }
+
         // Extract emails already found in conversation so Claude never re-searches them
         function extractKnownContacts(msgs: Anthropic.Messages.MessageParam[]): string {
           const found: Record<string, string> = {};
@@ -218,7 +229,7 @@ export async function POST(req: NextRequest) {
           const response = await anthropic.messages.create({
             model: "claude-sonnet-4-6",
             max_tokens: 4096,
-            system: buildSystemPrompt(timezone) + extractKnownContacts(claudeMessages),
+            system: buildSystemPrompt(timezone) + extractKnownContacts(claudeMessages) + detectResponseLanguage(claudeMessages),
             tools,
             messages: claudeMessages,
           });
