@@ -26,7 +26,7 @@ function bodyToHtml(text: string): { html: string; dir: "rtl" | "ltr" } {
   const html = `<!DOCTYPE html>
 <html dir="${dir}" lang="${hasHebrew ? "he" : "en"}">
 <head><meta charset="utf-8"></head>
-<body style="font-family:${fontFamily};font-size:15px;line-height:1.6;color:#222;direction:${dir};text-align:${dir === "rtl" ? "right" : "left"};max-width:600px;margin:0 auto;padding:24px;">
+<body style="font-family:${fontFamily};font-size:15px;line-height:1.6;color:#222;direction:${dir};text-align:${dir === "rtl" ? "right" : "left"};margin:0;padding:0;">
 ${htmlBody}
 </body></html>`;
   return { html, dir };
