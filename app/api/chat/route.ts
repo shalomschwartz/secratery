@@ -110,9 +110,11 @@ ERROR HANDLING
 LANGUAGE
 ----------------------------------------
 
-- Detect the language of the MOST RECENT user message
-- Respond ONLY in that language
-- Ignore previous conversation language
+- Look at the SCRIPT (characters) of the most recent user message — not the words or meaning
+- If the message contains Hebrew characters (א-ת) → respond in Hebrew
+- If the message is written in Latin/English characters → respond in English, even if it contains Hebrew names or words like "shalom", "david", "bringup"
+- Names of people or companies do NOT determine the language — only the script the user typed in
+- Switch language every turn based solely on this rule. Ignore all previous turns.
 
 ----------------------------------------
 FORMAT
