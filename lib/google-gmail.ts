@@ -6,6 +6,14 @@ function getGmailClient(accessToken: string) {
   return google.gmail({ version: "v1", auth });
 }
 
+// Encode non-ASCII header values per RFC 2047 (required for Hebrew subjects etc.)
+function encodeHeaderValue(value: string): string {
+  if (/[^\x00-\x7F]/.test(value)) {
+    return `=?UTF-8?B?${Buffer.from(value, "utf-8").toString("base64")}?=`;
+  }
+  return value;
+}
+
 function encodeEmail(params: {
   to: string;
   subject: string;
@@ -18,7 +26,7 @@ function encodeEmail(params: {
 }): string {
   const lines = [
     `To: ${params.to}`,
-    `Subject: ${params.subject}`,
+    `Subject: ${encodeHeaderValue(params.subject)}`,
     `Content-Type: text/plain; charset=utf-8`,
     `MIME-Version: 1.0`,
   ];
